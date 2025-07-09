@@ -2,10 +2,7 @@ package com.example.spring_boot_base.entity;
 
 import com.example.spring_boot_base.constant.ItemSellStatus;
 import com.example.spring_boot_base.dto.MemberFormDto;
-import com.example.spring_boot_base.repository.CartRepository;
-import com.example.spring_boot_base.repository.ItemRepository;
-import com.example.spring_boot_base.repository.MemberRepository;
-import com.example.spring_boot_base.repository.OrderRepository;
+import com.example.spring_boot_base.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,8 +40,12 @@ class OrderTest {
     @Autowired
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    OrderItemRepository orderItemRepository;
+
     @PersistenceContext
     private EntityManager em;
+
 
     public Member createMember() {
         MemberFormDto memberFormDto = new MemberFormDto();
@@ -128,5 +129,16 @@ class OrderTest {
 
         order.getOrderItems().remove(0);
         em.flush();
+    }
+
+    @Test
+    @DisplayName("지연 로딩 테스트")
+    public void lazyLoadingTest(){
+        Order order = this.createOrder();
+        Long orderItemId = order.getOrderItems().get(0).getId();
+        em.flush();
+        em.clear();
+        OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(EntityNotFoundException::new);
+        System.out.println("Order class : " + orderItem.getOrder().getClass());
     }
 }
