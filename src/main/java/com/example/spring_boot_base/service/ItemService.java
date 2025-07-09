@@ -3,6 +3,7 @@ package com.example.spring_boot_base.service;
 import com.example.spring_boot_base.dto.ItemFormDto;
 import com.example.spring_boot_base.dto.ItemImgDto;
 import com.example.spring_boot_base.dto.ItemSearchDto;
+import com.example.spring_boot_base.dto.MainItemDto;
 import com.example.spring_boot_base.entity.Item;
 import com.example.spring_boot_base.entity.ItemImg;
 import com.example.spring_boot_base.repository.ItemImgRepository;
@@ -73,5 +74,10 @@ public class ItemService {
     @Transactional(readOnly = true)
     public Page<Item> getAdminItemPage(ItemSearchDto itemSearchDto, Pageable pageable){
         return itemRepository.getAdminItemPage(itemSearchDto, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MainItemDto> getMainItemPage(ItemSearchDto itemSearchDto, Pageable pageable){
+        return itemRepository.getMainItemPage(itemSearchDto, pageable);
     }
 }
