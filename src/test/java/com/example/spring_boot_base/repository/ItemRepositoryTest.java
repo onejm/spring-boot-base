@@ -59,7 +59,7 @@ class ItemRepositoryTest {
 
     @Test
     @DisplayName("상품명 조회 테스트")
-    public void findByItemNmTest(){
+    public void findByitemNameTest(){
         this.createItemList();
         List<Item> itemList = itemRepository.findByItemName("테스트 상품1");
         for(Item item : itemList){
@@ -71,7 +71,7 @@ class ItemRepositoryTest {
 
     @Test
     @DisplayName("상품명, 상품상세설명 or 테스트")
-    public void findByItemNmOrItemDetailTest(){
+    public void findByitemNameOrItemDetailTest(){
         this.createItemList();
         List<Item> itemList = itemRepository.findByItemNameOrItemDetail("테스트 상품1", "테스트 상품 상세 설명5");
         for(Item item : itemList){
