@@ -1,5 +1,7 @@
 package com.example.spring_boot_base.service;
 
+import com.example.spring_boot_base.constant.OrderStatus;
+import com.example.spring_boot_base.dto.CreateOrderRequestDto;
 import com.example.spring_boot_base.dto.OrderDto;
 import com.example.spring_boot_base.dto.OrderHistoryDto;
 import com.example.spring_boot_base.dto.OrderItemDto;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -31,19 +34,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ItemImgRepository itemImgRepository;
 
-    public Long order(OrderDto orderDto, String email) {
-        Item item = itemRepository.findById(orderDto.getItemId())
+    public Long order(CreateOrderRequestDto requestDto, String email) {
+        Item item = itemRepository.findById(requestDto.getItemId())
                 .orElseThrow(EntityNotFoundException::new);
 
         Member member = memberRepository.findByEmail(email);
 
-        List<OrderItem> orderItemList = new ArrayList<>();
-        OrderItem orderItem = OrderItem.createOrderItem(item, orderDto.getCount());
-        orderItemList.add(orderItem);
+        OrderItem orderItem = OrderItem.createOrderItem(item, requestDto.getCount());
+        Order order = Order.createOrder(member, Collections.singletonList(orderItem));
 
-        Order order = Order.createOrder(member, orderItemList);
         orderRepository.save(order);
-
         return order.getId();
     }
 
@@ -76,11 +76,16 @@ public class OrderService {
         }
         return true;
     }
-    public void cancelOrder(Long orderId){
+
+    public Order cancelOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(EntityNotFoundException::new);
-        order.cancelOrder(); //주문 취소 상태로 변경하면 변경 감지 기능에 의해 트랜잭션 종료 후 update 쿼리 실행
+                .orElseThrow(() -> new EntityNotFoundException("주문이 존재하지 않음"));
+
+        order.setOrderStatus(OrderStatus.CANCEL);
+        orderRepository.save(order);
+        return order;
     }
+
 
     public Long orders(List<OrderDto> orderDtoList, String email){
         Member member = memberRepository.findByEmail(email);

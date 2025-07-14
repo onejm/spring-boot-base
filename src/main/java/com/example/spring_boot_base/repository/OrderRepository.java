@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("select o from Order o " +
@@ -18,4 +19,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "where o.member.email = :email"
     )
     Long countOrder(@Param("email") String email);
+
+    @Query("SELECT o FROM Order o " +
+            "JOIN FETCH o.orderItems oi " +
+            "JOIN FETCH oi.item " +
+            "WHERE o.id = :orderId")
+    Optional<Order> findWithItemsById(@Param("orderId") Long orderId);
 }

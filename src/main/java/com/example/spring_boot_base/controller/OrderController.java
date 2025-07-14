@@ -1,7 +1,9 @@
 package com.example.spring_boot_base.controller;
 
-import com.example.spring_boot_base.dto.OrderDto;
+
+import com.example.spring_boot_base.dto.CreateOrderRequestDto;
 import com.example.spring_boot_base.dto.OrderHistoryDto;
+import com.example.spring_boot_base.entity.Order;
 import com.example.spring_boot_base.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -25,31 +28,29 @@ import java.util.Optional;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping(value = "/order")
-    public @ResponseBody ResponseEntity order(@RequestBody @Valid OrderDto orderDto,
-                                              BindingResult bindingResult,
-                                              Principal principal) {
+    @PostMapping("/order")
+    public ResponseEntity<?> order(@RequestBody @Valid CreateOrderRequestDto requestDto,
+                                   BindingResult bindingResult,
+                                   Principal principal) {
         if (bindingResult.hasErrors()) {
             StringBuilder sb = new StringBuilder();
-            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : fieldErrors) {
-                sb.append(fieldError.getDefaultMessage());
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                sb.append(error.getDefaultMessage());
             }
-            return new ResponseEntity<String>(sb.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(sb.toString(), HttpStatus.BAD_REQUEST);
         }
 
-        String email = principal.getName(); // 현재 로그인한 회원의 이메일 정보 조회
+        String email = principal.getName();
         Long orderId;
 
         try {
-            orderId = orderService.order(orderDto, email);
+            orderId = orderService.order(requestDto, email);
         } catch (Exception e) {
-            return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<Long>(orderId, HttpStatus.OK);
+        return new ResponseEntity<>(orderId, HttpStatus.OK);
     }
-
 
     @GetMapping(value = {"/orders", "/orders/{page}"})
     public String orderHistory(@PathVariable("page") Optional<Integer> page, Principal principal, Model model){
@@ -62,11 +63,21 @@ public class OrderController {
     }
 
     @PostMapping("/order/{orderId}/cancel")
-    public @ResponseBody ResponseEntity cancelOrder(@PathVariable("orderId") Long orderId , Principal principal){
-        if(!orderService.validateOrder(orderId, principal.getName())){
-            return new ResponseEntity<String>("주문 취소 권한이 없습니다.", HttpStatus.FORBIDDEN);
+    @ResponseBody
+    public ResponseEntity<?> cancelOrder(@PathVariable("orderId") Long orderId, Principal principal) {
+        if (!orderService.validateOrder(orderId, principal.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("주문 취소 권한이 없습니다.");
         }
-        orderService.cancelOrder(orderId);
-        return new ResponseEntity<Long>(orderId, HttpStatus.OK);
+        Order canceledOrder = orderService.cancelOrder(orderId);
+
+        boolean isKakaoPay = canceledOrder.getKakaoTid() != null;
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "orderId", canceledOrder.getId(),
+                        "kakaoPay", isKakaoPay
+                )
+        );
     }
+
 }
