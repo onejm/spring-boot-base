@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  springbootbase-db:
+    image: mysql:8
+    container_name: springbootbase-db
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: myshopdb
+      MYSQL_USER: myshopuser
+      MYSQL_PASSWORD: mypassword
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - springbootbase-network
+
+  springbootbase-app:
+    image: onemini/springbootbase-app:latest
+    container_name: springbootbase-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      springbootbase-db:
+        condition: service_healthy
+    networks:
+      - springbootbase-network
+
+volumes:
+  mysql-data:
+
+networks:
+  springbootbase-network:
