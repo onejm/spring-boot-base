@@ -19,8 +19,36 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # 🔹 Secrets 값으로 application-prod.properties 생성
+      - name: Create application-prod.properties
+        run: |
+          mkdir -p src/main/resources
+          cat > src/main/resources/application-prod.properties <<'PROPS'
+          spring.application.name=spring-boot-base
+          spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+          spring.datasource.url=${{ secrets.SPRING_DATASOURCE_URL }}
+          spring.datasource.username=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          spring.datasource.password=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          spring.jpa.properties.hibernate.show_sql=true
+          spring.jpa.properties.hibernate.format_sql=true
+          logging.level.org.hibernate.type.descriptor.sql=trace
+          spring.jpa.hibernate.ddl-auto=update
+          spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+          spring.servlet.multipart.maxFileSize=20MB
+          spring.servlet.multipart.maxRequestSize=100MB
+          itemImgLocation=${{ secrets.ITEM_IMG_LOCATION }}
+          uploadPath=${{ secrets.UPLOAD_PATH }}
+          spring.jpa.properties.hibernate.default_batch_fetch_size=1000
+          kakaopay.cid=${{ secrets.KAKAOPAY_CID }}
+          kakaopay.admin-key=${{ secrets.KAKAOPAY_ADMIN_KEY }}
+          kakaopay.host=${{ secrets.KAKAOPAY_HOST }}
+          kakaopay.ready-url=${{ secrets.KAKAOPAY_READY_URL }}
+          kakaopay.approve-url=${{ secrets.KAKAOPAY_APPROVE_URL }}
+          slack.webhook-url=${{ secrets.SLACK_WEBHOOK_URL }}
+          PROPS
+
       - name: Build JAR with Maven
-        run: mvn -B clean package -DskipTests
+        run: mvn -B clean package -DskipTests -Dspring.profiles.active=prod
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -39,3 +67,4 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:${{ steps.vars.outputs.SHORT_SHA }}
