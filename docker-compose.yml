@@ -26,6 +26,10 @@ services:
     container_name: springbootbase-app
     ports:
       - "8080:8080"
+    environment:
+      - ITEM_IMG_LOCATION=/app/uploads
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       springbootbase-db:
         condition: service_healthy
