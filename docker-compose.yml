@@ -27,7 +27,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ITEM_IMG_LOCATION=/app/uploads
+      - itemImgLocation=/app/uploads
     volumes:
       - ./uploads:/app/uploads
     depends_on:
