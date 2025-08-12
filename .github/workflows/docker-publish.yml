@@ -61,3 +61,8 @@ jobs:
       - name: Build & Push image
         uses: docker/build-push-action@v5
         with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:${{ steps.vars.outputs.SHORT_SHA }}
