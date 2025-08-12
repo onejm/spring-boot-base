@@ -27,7 +27,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - itemImgLocation=/app/uploads
+      - SPRING_PROFILES_ACTIVE=prod
     volumes:
       - ./uploads:/app/uploads
     depends_on:

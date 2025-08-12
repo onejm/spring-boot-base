@@ -2,12 +2,11 @@ name: Build & Push (Docker Hub)
 
 on:
   push:
-    branches: [ "main" ]    # main 브랜치에 푸시될 때만 실행
+    branches: [ "main" ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,7 +18,6 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # 🔹 Secrets 값으로 application-prod.properties 생성
       - name: Create application-prod.properties
         run: |
           mkdir -p src/main/resources
@@ -48,7 +46,7 @@ jobs:
           PROPS
 
       - name: Build JAR with Maven
-        run: mvn -B clean package -DskipTests -Dspring.profiles.active=prod
+        run: mvn -B clean package -DskipTests
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -63,8 +61,3 @@ jobs:
       - name: Build & Push image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:${{ steps.vars.outputs.SHORT_SHA }}
