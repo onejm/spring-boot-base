@@ -1,21 +1,21 @@
 version: "3.8"
-
 services:
   springbootbase-db:
-    image: mysql:8
+    image: mysql:8.4
     container_name: springbootbase-db
-    restart: always
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT_MAP:-3307}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: myshopdb
-      MYSQL_USER: myshopuser
-      MYSQL_PASSWORD: mypassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 5s
+      timeout: 5s
       retries: 10
+      start_period: 10s
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -23,11 +23,21 @@ services:
 
   springbootbase-app:
     image: onemini/springbootbase-app:latest
+    platform: linux/amd64
     container_name: springbootbase-app
     ports:
-      - "8080:8080"
+      - "${APP_PORT_MAP:-8080}:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      KAKAOPAY_CID: ${KAKAOPAY_CID}
+      KAKAOPAY_ADMIN_KEY: ${KAKAOPAY_ADMIN_KEY}
+      KAKAOPAY_HOST: ${KAKAOPAY_HOST}
+      KAKAOPAY_READY_URL: ${KAKAOPAY_READY_URL}
+      KAKAOPAY_APPROVE_URL: ${KAKAOPAY_APPROVE_URL}
+      itemImgLocation: ${ITEM_IMG_LOCATION}
     volumes:
       - ./uploads:/app/uploads
     depends_on:
