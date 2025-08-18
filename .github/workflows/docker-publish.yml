@@ -2,12 +2,11 @@ name: Build & Push (Docker Hub)
 
 on:
   push:
-    branches: [ "main" ]    # main 브랜치에 푸시될 때만 실행
+    branches: [ "main" ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,14 +27,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract short SHA
-        id: vars
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      - name: Extract version
+        id: meta
+        run: |
+          APP_VER=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          echo "APP_VER=$APP_VER" >> $GITHUB_OUTPUT
 
-      - name: Build & Push image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/springbootbase-app:latest
+      - name: Build image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/myshop:${{ steps.meta.outputs.APP_VER }} \
+                       -t ${{ secrets.DOCKERHUB_USERNAME }}/myshop:latest .
+
+      - name: Push image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/myshop:${{ steps.meta.outputs.APP_VER }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/myshop:latest
